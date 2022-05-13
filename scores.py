@@ -19,9 +19,11 @@ import numpy as np
 import tensorflow as tf
 from tqdm import tqdm
 import math
+import pickle
 
 # The pretrained model on imagenet
 inception_model = tf.keras.applications.InceptionV3(include_top=False, weights="imagenet", pooling='avg')
+
 
 # Calculate the embeddings of each image, dataloader is all your images, count is the number of images. 
 def compute_embeddings(dataloader, count):
@@ -63,3 +65,8 @@ def fid(real_images, generated_images):
     fid = calculate_fid(real_images_embeddings, generated_images_embeddings)
 
     return fid
+
+def test():
+    print("Testing Performance")
+
+test()
