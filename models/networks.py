@@ -3,6 +3,7 @@ import torch.nn as nn
 from torch.nn import init
 import functools
 from torch.optim import lr_scheduler
+from torchinfo import summary
 
 
 ###############################################################################
@@ -613,3 +614,15 @@ class PixelDiscriminator(nn.Module):
     def forward(self, input):
         """Standard forward."""
         return self.net(input)
+
+def main():
+  input_nc = 1
+  output_nc = 1
+  ngf = 64
+
+  netG = define_G(input_nc, output_nc, ngf, 'resnet_6blocks', norm='batch', use_dropout=False, init_type='normal', init_gain=0.02, gpu_ids=[])
+  summary(netG.model, input_size=(16, input_nc, 10, 30))
+#   print(netG)
+
+if __name__ == '__main__':
+  main()
