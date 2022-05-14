@@ -1,7 +1,7 @@
 # Compute the Perfomance metrics for the GAN architectures
 
-# Citation https://wandb.ai/ayush-thakur/gan-evaluation/reports/How-to-Evaluate-GANs-using-Frechet-Inception-Distance-FID---Vmlldzo0MTAxOTI
-
+# Source 1: https://wandb.ai/ayush-thakur/gan-evaluation/reports/How-to-Evaluate-GANs-using-Frechet-Inception-Distance-FID---Vmlldzo0MTAxOTI
+# Source 2: https://machinelearningmastery.com/how-to-implement-the-frechet-inception-distance-fid-from-scratch/
 
 # Trying to evaluate how well you GAN is doing can be a bit difficult since the loss does not coorelate with how well the model is performing.
 # The most basic way is to see the output of the image after a certain amount of epochs and visually inspect the image. 
@@ -48,7 +48,7 @@ def load_test_images(directory):
     
     return np.array(images)
 
-# The pretrained model on imagenet
+# The pretrained model
 model = InceptionV3(include_top=False, pooling='avg', input_shape=(299,299,3))
 
 
@@ -87,22 +87,36 @@ def fid(real_images, generated_images):
     # resize images
     real_images = scale_images(real_images, (299,299,3))
     generated_images = scale_images(generated_images, (299,299,3))
-    print('Scaled', real_images.shape, generated_images.shape)
+    # print('Scaled', real_images.shape, generated_images.shape)
     # pre-process images
     real_images = preprocess_input(real_images)
     generated_images = preprocess_input(generated_images)
-    # fid between images1 and images1
+    # fid between real and generated
     fid = calculate_fid(model, real_images, real_images)
     print('FID (same): %.3f' % fid)
-    # fid between images1 and images2
+    # fid between real and generated
     fid = calculate_fid(model, real_images, generated_images)
-    print('FID (different): %.3f' % fid)
+    print('FID: %.3f' % fid)
+
+# SSIM (Structural SIMilarity)
+from skimage.metrics import structural_similarity
+
+def ssim(real_images, generated_images):
+    # fid between images1 and images1
+    (score_same, diff_same) = structural_similarity(real_images, real_images, full=True, channel_axis=3)
+    print('ssim (same): %.3f' % score_same)
+    # fid between images1 and images2
+    (score, diff) = structural_similarity(real_images, generated_images, full=True, channel_axis=3)
+    print('ssim: %.3f' % score)
+
 
 def test():
     print("Testing FID Score")
     real_images = load_test_images("./datasets/apple2orange/testA")
     generated_images = load_test_images("./datasets/apple2orange/trainA")
     generated_images = generated_images[:len(real_images)]
-    fid(real_images, generated_images)
+    fid(real_images.copy(), generated_images.copy())
+    print("Testing SSIM Score")
+    ssim(real_images.copy(), generated_images.copy())
 
 test()
