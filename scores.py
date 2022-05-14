@@ -15,58 +15,94 @@
 # Frechet Distance is a measure of similarity between curves that takes into account the location and ordering of the points along the curves.
 
 #
+from matplotlib import image
 import numpy as np 
 import tensorflow as tf
+from torch import QInt32Storage
 from tqdm import tqdm
 import math
 import pickle
+from PIL import Image
+from numpy import asarray
+import os
+
+from numpy import cov
+from numpy import trace
+from numpy import iscomplexobj
+from numpy import asarray
+from numpy.random import randint
+from scipy.linalg import sqrtm
+from keras.applications.inception_v3 import InceptionV3
+from keras.applications.inception_v3 import preprocess_input
+from keras.datasets.mnist import load_data
+from skimage.transform import resize
+
+def load_test_images(directory):
+    images = []
+    for filename in os.listdir(directory):
+        f = os.path.join(directory, filename)
+        real_fn = f.replace('\\', '/')
+        image = Image.open(real_fn)
+        data = asarray(image)
+        images.append(data)
+    
+    return np.array(images)
 
 # The pretrained model on imagenet
-inception_model = tf.keras.applications.InceptionV3(include_top=False, weights="imagenet", pooling='avg')
+model = InceptionV3(include_top=False, pooling='avg', input_shape=(299,299,3))
 
 
-# Calculate the embeddings of each image, dataloader is all your images, count is the number of images. 
-def compute_embeddings(dataloader, count):
-    image_embeddings = []
+# scale an array of images to a new size
+def scale_images(images, new_shape):
+	images_list = list()
+	for image in images:
+		# resize with nearest neighbor interpolation
+		new_image = resize(image, new_shape, 0)
+		# store
+		images_list.append(new_image)
+	return asarray(images_list)
 
-    for _ in tqdm(range(count)):
-        images = next(iter(dataloader))
-        embeddings = inception_model.predict(images)
-
-        image_embeddings.extend(embeddings)
-
-    return np.array(image_embeddings)
-
-def calculate_fid(real_embeddings, generated_embeddings):
-    # calculate mean and covariance statistics
-    mu1, sigma1 = real_embeddings.mean(axis=0), np.cov(real_embeddings, rowvar=False)
-    mu2, sigma2 = generated_embeddings.mean(axis=0), np.cov(generated_embeddings,  rowvar=False)
-    # calculate sum squared difference between means
-    ssdiff = np.sum((mu1 - mu2)**2.0)
-    # calculate sqrt of product between cov
-    covmean = np.linalg.sqrtm(sigma1.dot(sigma2))
-    # check and correct imaginary numbers from sqrt
-    if np.iscomplexobj(covmean):
-       covmean = covmean.real
-     # calculate score
-    fid = ssdiff + np.trace(sigma1 + sigma2 - 2.0 * covmean)
-    return fid
+# calculate frechet inception distance
+def calculate_fid(model, images1, images2):
+	# calculate activations
+	act1 = model.predict(images1)
+	act2 = model.predict(images2)
+	# calculate mean and covariance statistics
+	mu1, sigma1 = act1.mean(axis=0), cov(act1, rowvar=False)
+	mu2, sigma2 = act2.mean(axis=0), cov(act2, rowvar=False)
+	# calculate sum squared difference between means
+	ssdiff = np.sum((mu1 - mu2)**2.0)
+	# calculate sqrt of product between cov
+	covmean = sqrtm(sigma1.dot(sigma2))
+	# check and correct imaginary numbers from sqrt
+	if iscomplexobj(covmean):
+		covmean = covmean.real
+	# calculate score
+	fid = ssdiff + trace(sigma1 + sigma2 - 2.0 * covmean)
+	return fid
 
 def fid(real_images, generated_images):
-    count = len(real_images)
-
-    # compute embeddings for real images
-    real_images_embeddings = compute_embeddings(real_images, count)
-
-    # compute embeddings for generated images
-    generated_images_embeddings = compute_embeddings(generated_images, count)
-
-    # calulate the fid score between the embeddings
-    fid = calculate_fid(real_images_embeddings, generated_images_embeddings)
-
-    return fid
+    real_images = real_images.astype('float32')
+    generated_images = generated_images.astype('float32')
+    # resize images
+    real_images = scale_images(real_images, (299,299,3))
+    generated_images = scale_images(generated_images, (299,299,3))
+    print('Scaled', real_images.shape, generated_images.shape)
+    # pre-process images
+    real_images = preprocess_input(real_images)
+    generated_images = preprocess_input(generated_images)
+    # fid between images1 and images1
+    fid = calculate_fid(model, real_images, real_images)
+    print('FID (same): %.3f' % fid)
+    # fid between images1 and images2
+    fid = calculate_fid(model, real_images, generated_images)
+    print('FID (different): %.3f' % fid)
 
 def test():
-    print("Testing Performance")
+    print("Testing FID Score")
+    real_images = load_test_images("./datasets/apple2orange/testA")
+    generated_images = load_test_images("./datasets/apple2orange/trainA")
+    generated_images = generated_images[:len(real_images)]
+    fid(real_images, generated_images)
 
 test()
