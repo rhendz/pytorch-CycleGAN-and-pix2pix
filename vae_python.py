@@ -29,18 +29,18 @@ from argparse import Namespace
 
 # # Load in the data using cycle gan's data loader
 
-# opt = Namespace(batch_size=1, beta1=0.5, checkpoints_dir='./checkpoints', continue_train=False, crop_size=256, 
-#                dataroot='./datasets/apple2orange', dataset_mode='unaligned', direction='AtoB', 
-#                display_env='main', display_freq=400, display_id=1, display_ncols=4, display_port=8097, 
-#                display_server='http://localhost', display_winsize=256, epoch='latest', epoch_count=1, 
-#                gan_mode='lsgan', gpu_ids='0', init_gain=0.02, init_type='normal', input_nc=1, lambda_A=10.0, lambda_B=10.0, 
-#                lambda_identity=0.5, load_iter=0, load_size=256, lr=0.0002, lr_decay_iters=50, lr_policy='linear', 
-#                max_dataset_size=np.inf, model='cycle_gan', n_epochs=100, n_epochs_decay=100, n_layers_D=3, 
-#                name='apple2orange', ndf=64, netD='basic', netG='resnet_3blocks', ngf=64, no_dropout=True, 
-#                no_flip=False, no_html=False, norm='instance', num_threads=4, output_nc=1, phase='train', 
-#                pool_size=50, preprocess='resize_and_crop', print_freq=100, save_by_iter=False, 
-#                save_epoch_freq=5, save_latest_freq=5000, serial_batches=False, suffix='', 
-#                update_html_freq=1000, use_wandb=False, verbose=False)
+opt = Namespace(batch_size=1, beta1=0.5, checkpoints_dir='./checkpoints', continue_train=False, crop_size=256, 
+               dataroot='./datasets/apple2orange', dataset_mode='unaligned', direction='AtoB', 
+               display_env='main', display_freq=400, display_id=1, display_ncols=4, display_port=8097, 
+               display_server='http://localhost', display_winsize=256, epoch='latest', epoch_count=1, 
+               gan_mode='lsgan', gpu_ids='0', init_gain=0.02, init_type='normal', input_nc=1, lambda_A=10.0, lambda_B=10.0, 
+               lambda_identity=0.5, load_iter=0, load_size=256, lr=0.0002, lr_decay_iters=50, lr_policy='linear', 
+               max_dataset_size=np.inf, model='cycle_gan', n_epochs=100, n_epochs_decay=100, n_layers_D=3, 
+               name='apple2orange', ndf=64, netD='basic', netG='resnet_3blocks', ngf=64, no_dropout=True, 
+               no_flip=False, no_html=False, norm='instance', num_threads=4, output_nc=1, phase='train', 
+               pool_size=50, preprocess='resize_and_crop', print_freq=100, save_by_iter=False, 
+               save_epoch_freq=5, save_latest_freq=5000, serial_batches=False, suffix='', 
+               update_html_freq=1000, use_wandb=False, verbose=False)
 
 
 # # Load in the train dataset
@@ -85,7 +85,6 @@ test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size,sh
 
 
 
-
 from models.networks import *
 
 shp = 3
@@ -93,7 +92,6 @@ mnist_padding = 1
 
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 print(f'Selected device: {device}')
-
 class VariationalEncoder(nn.Module):
     def __init__(self, latent_dims):  
         super(VariationalEncoder, self).__init__()
@@ -107,12 +105,12 @@ class VariationalEncoder(nn.Module):
         self.linear3 = nn.Linear(128, latent_dims)
 
         self.N = torch.distributions.Normal(0, 1)
-        self.N.loc = self.N.loc.cuda() # hack to get sampling on the GPU
-        self.N.scale = self.N.scale.cuda()
+        self.N.loc = self.N.loc # hack to get sampling on the GPU
+        self.N.scale = self.N.scale
         self.kl = 0
 
     def forward(self, x):
-        x = x.to(device)
+        x = x
         x = F.relu(self.conv1(x))
         x = F.relu(self.batch2(self.conv2(x)))
         x = F.relu(self.conv3(x))
@@ -197,7 +195,7 @@ class VariationalAutoencoder(nn.Module):
         self.decoder = Decoder2(latent_dims)
 
     def forward(self, x):
-        x = x.to(device)
+        x = x
         z = self.encoder(x)
         return self.decoder(z)
 
@@ -255,7 +253,7 @@ lr = 1e-3
 
 optim = torch.optim.Adam(vae.parameters(), lr=lr, weight_decay=1e-5)
 
-vae.to(device)
+vae
 
 ### Training function
 def train_epoch(vae, device, dataloader, optimizer):
@@ -266,7 +264,7 @@ def train_epoch(vae, device, dataloader, optimizer):
     for x, _ in dataloader: 
         # print(x)
         # Move tensor to the proper device
-        x = x.to(device)
+        x = x
         x_hat = vae(x)
         # Evaluate loss
         loss = ((x - x_hat)**2).sum() + vae.encoder.kl
@@ -276,7 +274,7 @@ def train_epoch(vae, device, dataloader, optimizer):
         loss.backward()
         optimizer.step()
         # Print batch loss
-        # print('\t partial train loss (single batch): %f' % (loss.item()))
+        print('\t partial train loss (single batch): %f' % (loss.item()))
         train_loss+=loss.item()
 
     return train_loss / len(dataloader.dataset)
@@ -289,7 +287,7 @@ def test_epoch(vae, device, dataloader):
     with torch.no_grad(): # No need to track the gradients
         for x, _ in dataloader:
             # Move tensor to the proper device
-            x = x.to(device)
+            x = x
             # Encode data
             encoded_data = vae.encoder(x)
             # Decode data
@@ -314,7 +312,7 @@ def plot_ae_outputs(encoder,decoder,n=10):
     t_idx = {i:np.where(targets==i)[0][0] for i in range(n)}
     for i in range(n):
       ax = plt.subplot(2,n,i+1)
-      img = test_dataset[t_idx[i]][0].unsqueeze(0).to(device)
+      img = test_dataset[t_idx[i]][0].unsqueeze(0)
       encoder.eval()
       decoder.eval()
       with torch.no_grad():
@@ -340,9 +338,10 @@ vae_encoder = 0
 vae_decoder = 0
 
 for epoch in range(num_epochs):
-  train_loss = train_epoch(vae,device,train_loader,optim)
-  val_loss = test_epoch(vae,device,valid_loader)
-  print('\n EPOCH {}/{} \t train loss {:.3f} \t val loss {:.3f}'.format(epoch + 1, num_epochs,train_loss,val_loss))
+    print("Training")
+    train_loss = train_epoch(vae,device,train_loader,optim)
+    val_loss = test_epoch(vae,device,valid_loader)
+    print('\n EPOCH {}/{} \t train loss {:.3f} \t val loss {:.3f}'.format(epoch + 1, num_epochs,train_loss,val_loss))
   # vae_encoder = vae.encoder
   # vae_decoder = vae.decoder
-  plot_ae_outputs(vae.encoder,vae.decoder,n=10)
+    plot_ae_outputs(vae.encoder,vae.decoder,n=10)
