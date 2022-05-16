@@ -78,6 +78,7 @@ class CycleGANModel(BaseModel):
 
         # load VAE trained decoder
         if self.isTrain:
+            print(self.isTrain)
             if opt.vae != 'store_true':
                 print('Loading VAE-Generator weights!')
                 self.netG_A.module.load_state_dict(torch.load('models/vae-generator-model.pt'))
