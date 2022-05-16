@@ -76,9 +76,10 @@ class CycleGANModel(BaseModel):
         self.netG_B = networks.define_G(opt.output_nc, opt.input_nc, opt.ngf, opt.netG, opt.norm,
                                         not opt.no_dropout, opt.init_type, opt.init_gain, self.gpu_ids)
 
-        print(self.netG_A.module)
         # load VAE trained decoder
-        self.netG_A.module.load_state_dict(torch.load('models/vae-decoder-model.pt'))
+        if opt.vae != 'store_true':
+            print('Loading VAE-Generator weights!')
+            self.netG_A.module.load_state_dict(torch.load('models/vae-generator-model.pt'))
 
         if self.isTrain:  # define discriminators
             self.netD_A = networks.define_D(opt.output_nc, opt.ndf, opt.netD,

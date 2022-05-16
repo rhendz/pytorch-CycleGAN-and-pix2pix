@@ -1,4 +1,4 @@
-# This trains a VAE on MNIST dataset for baseline performance
+# This trains a VAE on Apple dataset
 
 import matplotlib.pyplot as plt # plotting library
 import numpy as np # this module is useful to work with numerical arrays
@@ -25,7 +25,7 @@ from models.networks import *
 
 # Set options for CycleGAN network
 opt = Namespace(batch_size=1, beta1=0.5, checkpoints_dir='./checkpoints', continue_train=False, crop_size=28, 
-               dataroot='./dataset/MNIST', dataset_mode='unaligned', direction='AtoB', 
+               dataroot='./datasets/apple2orange_resized_64', dataset_mode='unaligned', direction='AtoB', 
                display_env='main', display_freq=400, display_id=1, display_ncols=4, display_port=8097, 
                display_server='http://localhost', display_winsize=28, epoch='latest', epoch_count=1, 
                gan_mode='lsgan', gpu_ids='0', init_gain=0.02, init_type='normal', input_nc=1, lambda_A=10.0, lambda_B=10.0, 
