@@ -42,3 +42,4 @@ test/data/legacy_serialized.pt
 *~
 .idea
 venv/
+*_nets.zip
