@@ -1,7 +1,7 @@
 # This trains a VAE on MNIST dataset for baseline performance
 
-import matplotlib.pyplot as plt # plotting library
-import numpy as np # this module is useful to work with numerical arrays
+import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd 
 import random 
 import torch
