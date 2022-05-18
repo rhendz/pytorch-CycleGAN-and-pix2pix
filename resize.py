@@ -28,7 +28,7 @@ def resize_images(directory,size):
         # plt.show()
         image.save(parent_dir+'/'+filename)
     
-resize_images("./datasets/apple2orange/testA", 28)
-resize_images("./datasets/apple2orange/testB", 28)
-resize_images("./datasets/apple2orange/trainA", 28)
-resize_images("./datasets/apple2orange/trainB", 28)
+resize_images("./datasets/apple2orange/testA", 32)
+resize_images("./datasets/apple2orange/testB", 32)
+resize_images("./datasets/apple2orange/trainA", 32)
+resize_images("./datasets/apple2orange/trainB", 32)
